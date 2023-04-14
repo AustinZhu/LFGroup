@@ -4,9 +4,9 @@ import Image from 'next/image';
 import { useState } from 'react';
 
 const data = [
-  'message 1: jwiejifjsajdklfsaldfljsakldjflksjfljlk',
-  'message 2 jwiejifjsajdklfsaldfljsakldjflksjfljlk',
-  'message 3 jwiejifjsajdklfsaldfljsakldjflksjfljlk',
+  'will you go lunch with us ',
+  'will you go lunch with us ',
+  'will you go lunch with us ',
 ];
 
 export default function GroupList() {
@@ -17,7 +17,7 @@ export default function GroupList() {
   }
   return (
     <>
-      <div className='bg-gray-100 p-4 flex justify-between items-center'>
+      <div className='p-4 flex justify-between items-center'>
         <h2 className='text-lg font-bold'>Group List</h2>
         <div className='dropdown'>
           <label tabIndex={0} className='btn m-1'>
@@ -40,16 +40,18 @@ export default function GroupList() {
         {data.map((item, index) => (
           <div
             key={index}
-            className={`flex items-center mb-4 ${index === clicked ? 'bg-green-100' : ''}`}
+            className='group'
             onClick={() => handleClick(index)}
           >
-            <Image alt='avatar' src='/avatar1.png' width={40} height={40} className='mr-4' />
-            <div className='flex flex-col'>
-              <div className='flex items-center'>
-                <p className='font-bold'>Group 1</p>
-                <span className='ml-auto text-gray-400 text-sm'>10:30 AM</span>
+            <div className='flex items-center p-4 group-hover:bg-[#0BA360]'>
+              <Image alt='avatar' src='/avatar1.png' width={40} height={40} className='mr-4' />
+              <div className='flex flex-col w-full'>
+                <div className='flex items-center'>
+                  <p className='font-bold group-hover:text-white'>Group 1</p>
+                  <span className='ml-auto text-gray-300 group-hover:opacity-50 group-hover:text-gray-100 text-sm'>10:30 AM</span>
+                </div>
+                <p className='text-gray-500 group-hover:opacity-75 group-hover:text-gray-200'>{item}</p>
               </div>
-              <p>{item}</p>
             </div>
           </div>
         ))}

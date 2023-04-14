@@ -13,8 +13,8 @@ export default function GroupDetail() {
           <h2 className='text-lg font-bold'>(42)</h2>
         </div>
         <div className='flex items-center'>
-          <Image alt='Add Member' src='/user-plus.png' width={40} height={40} className='mr-4' />
-          <Image alt='More' src='/dots.png' width={40} height={40} />
+          <Image alt='Add Member' src='/user-plus.svg' width={24} height={24} className='mr-4' />
+          <Image alt='More' src='/dots.svg' width={24} height={24} />
         </div>
       </div>
       <div className='flex-grow'>

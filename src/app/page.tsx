@@ -2,10 +2,17 @@
 
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import '@rainbow-me/rainbowkit/styles.css';
-import { useAccount } from 'wagmi';
+import { useRouter } from 'next/navigation';
+import { useSigner } from 'wagmi';
 
-export default function Home() {
-  const { isConnected, address } = useAccount()
+const Home = () => {
+  const { data: signer } = useSigner();
+  const router = useRouter();
+
+  if (signer) {
+    router.push('/chat');
+  }
+
   return (
     <div className='flex flex-col justify-center items-center h-screen'>
       <h1 className='text-4xl font-bold mt-1'>Welcome to</h1>
@@ -15,4 +22,6 @@ export default function Home() {
       <ConnectButton />
     </div>
   );
-}
+};
+
+export default Home;

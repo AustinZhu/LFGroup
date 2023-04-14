@@ -41,6 +41,9 @@ dependencies:
   '@rainbow-me/rainbowkit':
     specifier: 0.12.8
     version: 0.12.8(@types/react@18.0.35)(ethers@5.7.2)(react-dom@18.2.0)(react@18.2.0)(wagmi@0.12.8)
+  '@tanstack/react-query':
+    specifier: ^4.29.1
+    version: 4.29.1(react-dom@18.2.0)(react@18.2.0)
   '@xmtp/xmtp-js':
     specifier: 8.0.2
     version: 8.0.2
@@ -53,6 +56,9 @@ dependencies:
   ethers-multicall:
     specifier: 0.2.3
     version: 0.2.3(ethers@5.7.2)
+  minidenticons:
+    specifier: ^3.1.2
+    version: 3.1.2
   next:
     specifier: 13.3.0
     version: 13.3.0(@babel/core@7.21.4)(react-dom@18.2.0)(react@18.2.0)
@@ -7280,6 +7286,11 @@ packages:
     resolution: {integrity: sha512-I9jwMn07Sy/IwOj3zVkVik2JTvgpaykDZEigL6Rx6N9LbMywwUSMtxET+7lVoDLLd3O3IXwJwvuuns8UB/HeAg==}
     engines: {node: '>=4'}
     dev: true
+
+  /minidenticons@3.1.2:
+    resolution: {integrity: sha512-UKMFgjagF6kZvGTV/SuMFLqvqvcnylBKLFRgpX3/1emp8zjLswZPaFbdslN81D+GsYNxwjxUkWRIo71cM3W0uA==}
+    engines: {node: '>=15.14.0'}
+    dev: false
 
   /minimalistic-assert@1.0.1:
     resolution: {integrity: sha512-UtJcAD4yEaGtjPezWuO9wC4nwUnVH/8/Im3yEHQP4b67cXlD/Qr9hdITCU1xDbSEXg2XKNaP8jsReV7vQd00/A==}
