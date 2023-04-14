@@ -20,8 +20,8 @@ export default function GroupList() {
       <div className='p-4 flex justify-between items-center'>
         <h2 className='text-lg font-bold'>Group List</h2>
         <div className='dropdown'>
-          <label tabIndex={0} className='btn m-1'>
-            +
+          <label tabIndex={0} className='btn bg-gray-200 border-0 hover:bg-gray-400'>
+            <Image alt='Add' src='/plus.svg' width={24} height={24} className='' />
           </label>
           <ul
             tabIndex={0}
@@ -38,19 +38,37 @@ export default function GroupList() {
       </div>
       <div>
         {data.map((item, index) => (
-          <div
-            key={index}
-            className='group'
-            onClick={() => handleClick(index)}
-          >
-            <div className='flex items-center p-4 group-hover:bg-[#0BA360]'>
+          <div key={index} className='group' onClick={() => handleClick(index)}>
+            <div
+              className={`flex items-center p-4 group-hover:bg-[#0BA360] ${
+                index === clicked ? 'bg-[#0BA360]' : ''
+              }`}
+            >
               <Image alt='avatar' src='/avatar1.png' width={40} height={40} className='mr-4' />
               <div className='flex flex-col w-full'>
                 <div className='flex items-center'>
-                  <p className='font-bold group-hover:text-white'>Group 1</p>
-                  <span className='ml-auto text-gray-300 group-hover:opacity-50 group-hover:text-gray-100 text-sm'>10:30 AM</span>
+                  <p
+                    className={`font-bold group-hover:text-white ${
+                      index === clicked ? 'text-white' : ''
+                    }`}
+                  >
+                    Group 1
+                  </p>
+                  <span
+                    className={`ml-auto group-hover:opacity-50 group-hover:text-gray-100 text-sm ${
+                      index === clicked ? 'text-gray-100 opacity-50' : 'text-gray-300'
+                    }`}
+                  >
+                    10:30 AM
+                  </span>
                 </div>
-                <p className='text-gray-500 group-hover:opacity-75 group-hover:text-gray-200'>{item}</p>
+                <p
+                  className={`group-hover:opacity-75 group-hover:text-gray-200 ${
+                    index === clicked ? 'opacity-75 text-gray-200' : 'text-gray-500'
+                  }`}
+                >
+                  {item}
+                </p>
               </div>
             </div>
           </div>
