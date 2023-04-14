@@ -13,18 +13,15 @@ export default function Messages({ readerClient }: MessagesProps) {
   const [messages, setMessages] = useState<DecodedMessage[]>([
     {
       id: '12321',
-      senderAddress: '0x000',
-      recipientAddress: '0x000',
+      senderAddress: '0x0000000000000000000000000000000000000000',
       content: 'Hello World',
       sent: new Date(),
     } as DecodedMessage,
   ]);
 
-  if (!readerClient) {
-    return null;
-  }
-
   useEffect(() => {
+    if (!readerClient) return;
+
     const streamMessages = async () => {
       const newStream = await readerClient.conversations.streamAllMessages();
       for await (const msg of newStream) {
@@ -36,7 +33,7 @@ export default function Messages({ readerClient }: MessagesProps) {
       }
     };
     streamMessages();
-  }, [readerClient.conversations]);
+  }, [readerClient?.conversations]);
 
   return (
     <div className='divide-y h-full'>
@@ -48,9 +45,9 @@ export default function Messages({ readerClient }: MessagesProps) {
                 <IdenticonImg username={msg.senderAddress} width={40} height={40} />
               </div>
             </div>
-            <div className='chat-header'>
-              <h5 className='font-bold'>{truncateEthAddress(msg.senderAddress)}</h5>
-              <time className='text-xs opacity-50'>{msg.sent.toISOString()}</time>
+            <div className='chat-header inline-flex gap-2 p-1'>
+              <p>{truncateEthAddress(msg.senderAddress)}</p>
+              <time className='text-xs opacity-50'>{msg.sent.toLocaleTimeString()}</time>
             </div>
             <div className='chat-bubble'>{msg.content}</div>
           </div>
