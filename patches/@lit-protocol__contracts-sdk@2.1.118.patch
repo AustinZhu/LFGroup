@@ -1,0 +1,22 @@
+diff --git a/src/lib/contracts-sdk.js b/src/lib/contracts-sdk.js
+index 0fa183803a51d24a7210361ae8b8e1d579092156..c45eb89d94f9ca7c7e041580563e1bde46a4ae40 100644
+--- a/src/lib/contracts-sdk.js
++++ b/src/lib/contracts-sdk.js
+@@ -402,7 +402,7 @@ class LitContracts {
+                     if (this.isPKP) {
+                         this.log("This is a PKP wallet, so we'll use the PKP wallet to sign the tx");
+                         this.log('...populating tx');
+-                        let tx = await this.pkpNftContract.write.populateTransaction.mintNext(2, { value: mintCost });
++                        let tx = await this.pkpNftContract.write.populateTransaction.mintNext(2, { value: mintCost.arg });
+                         this.log('tx:', tx);
+                         this.log('...signing tx');
+                         let signedTx = await this.signer.signTransaction(tx);
+@@ -420,7 +420,7 @@ class LitContracts {
+                     this.log('res:', res);
+                     let events = 'events' in res ? res.events : res.logs;
+                     let tokenIdFromEvent;
+-                    tokenIdFromEvent = events[1].topics[3];
++                    tokenIdFromEvent = this.utils.hexToDec(res.events[0].args.tokenId.toHexString());
+                     console.warn('tokenIdFromEvent:', tokenIdFromEvent);
+                     return { tx: sentTx, tokenId: tokenIdFromEvent };
+                 },
