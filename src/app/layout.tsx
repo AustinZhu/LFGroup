@@ -1,9 +1,11 @@
 'use client';
 
 import { LitProvider } from '@/components';
+import XMTPProvider from '@/components/XMTPProvider';
 import { lensConfig } from '@/config/lens';
 import { litConfig } from '@/config/lit';
 import { chains, wagmiClient } from '@/config/wagmi';
+import { xmtpConfig } from '@/config/xmtp';
 import { LensProvider } from '@lens-protocol/react-web';
 import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -20,7 +22,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <WagmiConfig client={wagmiClient}>
             <RainbowKitProvider chains={chains}>
               <LensProvider config={lensConfig}>
-                <LitProvider config={litConfig}>{children}</LitProvider>
+                <LitProvider config={litConfig}>
+                  <XMTPProvider config={xmtpConfig}>{children}</XMTPProvider>
+                </LitProvider>
               </LensProvider>
             </RainbowKitProvider>
           </WagmiConfig>

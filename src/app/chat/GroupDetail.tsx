@@ -1,10 +1,16 @@
 'use client';
 
+import { Client, Conversation } from '@xmtp/xmtp-js';
 import Image from 'next/image';
 import MemberList from './MemberList';
 import Messages from './Messages';
 
-export default function GroupDetail() {
+interface GroupDetailProps {
+  readerClient?: Client;
+  convo?: Conversation;
+}
+
+export default function GroupDetail({ readerClient }: GroupDetailProps) {
   return (
     <div className='divide-y flex flex-col h-full'>
       <div className='p-4 flex justify-between items-center'>
@@ -20,7 +26,7 @@ export default function GroupDetail() {
       <div className='flex-grow'>
         <div className='flex h-full divide-x'>
           <div className='w-3/4'>
-            <Messages />
+            <Messages readerClient={readerClient} />
           </div>
           <div className='p-1 w-1/4'>
             <MemberList />

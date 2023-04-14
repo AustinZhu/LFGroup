@@ -1,69 +1,60 @@
 'use client';
 
-import Image from 'next/image';
+import { IdenticonImg } from '@/components';
+import { truncateEthAddress } from '@/utils/ethereum';
+import { Client, DecodedMessage } from '@xmtp/xmtp-js';
+import { useEffect, useState } from 'react';
 
-export default function Messages() {
+interface MessagesProps {
+  readerClient?: Client;
+}
+
+export default function Messages({ readerClient }: MessagesProps) {
+  const [messages, setMessages] = useState<DecodedMessage[]>([
+    {
+      id: '12321',
+      senderAddress: '0x000',
+      recipientAddress: '0x000',
+      content: 'Hello World',
+      sent: new Date(),
+    } as DecodedMessage,
+  ]);
+
+  if (!readerClient) {
+    return null;
+  }
+
+  useEffect(() => {
+    const streamMessages = async () => {
+      const newStream = await readerClient.conversations.streamAllMessages();
+      for await (const msg of newStream) {
+        setMessages((prevMessages) => {
+          const messages = [...prevMessages];
+          messages.push(msg);
+          return messages;
+        });
+      }
+    };
+    streamMessages();
+  }, [readerClient.conversations]);
+
   return (
     <div className='divide-y h-full'>
       <div className='h-2/3 mx-2'>
-        <div className='chat chat-start'>
-          <div className='chat-image avatar'>
-            <div className='w-10 rounded-full'>
-              <Image
-                src='/avatar1.png'
-                alt='Avatar'
-                width={40}
-                height={40}
-                className='w-12 h-12 rounded-full mr-4'
-              />
+        {messages.map((msg) => (
+          <div className='chat chat-start'>
+            <div className='chat-image avatar'>
+              <div className='w-10 rounded-full'>
+                <IdenticonImg username={msg.senderAddress} width={40} height={40} />
+              </div>
             </div>
-          </div>
-          <div className='chat-bubble'>
-            It was said that you would, destroy the Sith, not join them.
-          </div>
-        </div>
-        <div className='chat chat-start'>
-          <div className='chat-image avatar'>
-            <div className='w-10 rounded-full'>
-              <Image
-                src='/avatar1.png'
-                alt='Avatar'
-                width={40}
-                height={40}
-                className='w-12 h-12 rounded-full mr-4'
-              />
+            <div className='chat-header'>
+              <h5 className='font-bold'>{truncateEthAddress(msg.senderAddress)}</h5>
+              <time className='text-xs opacity-50'>{msg.sent.toISOString()}</time>
             </div>
+            <div className='chat-bubble'>{msg.content}</div>
           </div>
-          <div className='chat-bubble'>It was you who would bring balance to the Force</div>
-        </div>
-        <div className='chat chat-start'>
-          <div className='chat-image avatar'>
-            <div className='w-10 rounded-full'>
-              <Image
-                src='/avatar1.png'
-                alt='Avatar'
-                width={40}
-                height={40}
-                className='w-12 h-12 rounded-full mr-4'
-              />
-            </div>
-          </div>
-          <div className='chat-bubble'>Not leave it in Darkness</div>
-        </div>
-        <div className='chat chat-end'>
-          <div className='chat-image avatar'>
-            <div className='w-10 rounded-full'>
-              <Image
-                src='/avatar1.png'
-                alt='Avatar'
-                width={40}
-                height={40}
-                className='w-12 h-12 rounded-full mr-4'
-              />
-            </div>
-          </div>
-          <div className='chat-bubble'>You underestimate my power!</div>
-        </div>
+        ))}
       </div>
       <div className='h-1/3'>
         <textarea placeholder='Bio' className='textarea h-full w-full'></textarea>

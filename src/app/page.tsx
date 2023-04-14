@@ -1,17 +1,28 @@
 'use client';
 
+import { useLitConnect } from '@/hooks/useLit';
+import { useXMTPConnect } from '@/hooks/useXMTP';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import '@rainbow-me/rainbowkit/styles.css';
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import { useSigner } from 'wagmi';
 
 const Home = () => {
   const { data: signer } = useSigner();
   const router = useRouter();
+  const { connect: connectLit } = useLitConnect();
+  const { connect: connectXMTP } = useXMTPConnect();
 
-  if (signer) {
-    router.push('/chat');
-  }
+  useEffect(() => {
+    (async () => {
+      if (signer) {
+        await connectLit(signer);
+        await connectXMTP(signer);
+        router.push('/chat');
+      }
+    })();
+  }, [signer]);
 
   return (
     <div className='flex flex-col justify-center items-center h-screen'>

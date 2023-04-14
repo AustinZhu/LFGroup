@@ -1,7 +1,13 @@
 'use client';
 
+import { usePKPWallet } from '@/hooks/useLit';
+import { useXMTPClient } from '@/hooks/useXMTP';
+import { LitContracts } from '@lit-protocol/contracts-sdk';
+import { PKPNFT } from '@lit-protocol/contracts-sdk/src/abis/PKPNFT';
+import { Client, Conversation } from '@xmtp/xmtp-js';
 import Image from 'next/image';
 import { useState } from 'react';
+import { useSigner } from 'wagmi';
 
 const data = [
   'will you go lunch with us ',
@@ -9,12 +15,36 @@ const data = [
   'will you go lunch with us ',
 ];
 
-export default function GroupList() {
-  const [clicked, setClicked] = useState<number>();
+interface GroupListProps {
+  setReaderClient: (client: Client) => void;
+  setConvo: (convo?: Conversation) => void;
+}
 
-  function handleClick(index: number) {
-    setClicked(index);
-  }
+const GroupList = ({ setReaderClient, setConvo }: GroupListProps) => {
+  const [currentGroupId, setCurrentGroupId] = useState<number>();
+  const { createWallet } = usePKPWallet();
+  const { data: signer } = useSigner();
+  const writer = useXMTPClient();
+
+  const contracts = new LitContracts({ signer });
+
+  const handleClick = async (id: number) => {
+    setCurrentGroupId(id);
+
+    await contracts.connect();
+    const pubKey = await (contracts.pkpNftContract.read as PKPNFT).getPubkey(id);
+    const wallet = await createWallet(pubKey);
+    if (!wallet) {
+      return;
+    }
+
+    const reader = await Client.create(wallet, { env: 'production' });
+    setReaderClient(reader);
+
+    const convo = await writer?.conversations.newConversation(wallet.address);
+    setConvo(convo);
+  };
+
   return (
     <>
       <div className='p-4 flex justify-between items-center'>
@@ -41,7 +71,7 @@ export default function GroupList() {
           <div key={index} className='group' onClick={() => handleClick(index)}>
             <div
               className={`flex items-center p-4 group-hover:bg-[#0BA360] ${
-                index === clicked ? 'bg-[#0BA360]' : ''
+                index === currentGroupId ? 'bg-[#0BA360]' : ''
               }`}
             >
               <Image alt='avatar' src='/avatar1.png' width={40} height={40} className='mr-4' />
@@ -49,14 +79,14 @@ export default function GroupList() {
                 <div className='flex items-center'>
                   <p
                     className={`font-bold group-hover:text-white ${
-                      index === clicked ? 'text-white' : ''
+                      index === currentGroupId ? 'text-white' : ''
                     }`}
                   >
                     Group 1
                   </p>
                   <span
                     className={`ml-auto group-hover:opacity-50 group-hover:text-gray-100 text-sm ${
-                      index === clicked ? 'text-gray-100 opacity-50' : 'text-gray-300'
+                      index === currentGroupId ? 'text-gray-100 opacity-50' : 'text-gray-300'
                     }`}
                   >
                     10:30 AM
@@ -64,7 +94,7 @@ export default function GroupList() {
                 </div>
                 <p
                   className={`group-hover:opacity-75 group-hover:text-gray-200 ${
-                    index === clicked ? 'opacity-75 text-gray-200' : 'text-gray-500'
+                    index === currentGroupId ? 'opacity-75 text-gray-200' : 'text-gray-500'
                   }`}
                 >
                   {item}
@@ -76,4 +106,6 @@ export default function GroupList() {
       </div>
     </>
   );
-}
+};
+
+export default GroupList;
