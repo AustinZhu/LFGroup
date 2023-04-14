@@ -1,0 +1,186 @@
+diff --git a/src/abis/AccessControlConditions.data.js b/src/abis/AccessControlConditions.data.js
+index 436b959d42b58d55a4fb53f1b4870922f1b00c7f..a5b99c0f835500ad411853c47f8e3e711bed0d6f 100644
+--- a/src/abis/AccessControlConditions.data.js
++++ b/src/abis/AccessControlConditions.data.js
+@@ -2,7 +2,7 @@
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.accessControlConditions = void 0;
+ exports.accessControlConditions = {
+-    "address": "0x6620A0e03Ca33a3818f1539DF94f9807b12B9Ec2",
++    "address": "0x54D9b06686e4d009E59B0271da4358FEE5500E26",
+     "abi": [
+         {
+             "inputs": [],
+diff --git a/src/abis/LITToken.data.js b/src/abis/LITToken.data.js
+index 130dfeed25cf6abdc38a7a10adf127e64a945011..f1513ac7ea795c5eb3fa9508d8de53ea656cd697 100644
+--- a/src/abis/LITToken.data.js
++++ b/src/abis/LITToken.data.js
+@@ -2,7 +2,7 @@
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.litToken = void 0;
+ exports.litToken = {
+-    "address": "0x541C8a3D27643002fb8A37dCf42D22940B5b2F51",
++    "address": "0x53695556f8a1a064EdFf91767f15652BbfaFaD04",
+     "abi": [
+         {
+             "inputs": [],
+diff --git a/src/abis/Multisender.data.js b/src/abis/Multisender.data.js
+index 74e753c45aadd4a313427cd91bbb40bfe5a06a9b..bf86f1b34eaaaaf278c291cf362855150d9be546 100644
+--- a/src/abis/Multisender.data.js
++++ b/src/abis/Multisender.data.js
+@@ -2,7 +2,7 @@
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.multisender = void 0;
+ exports.multisender = {
+-    "address": "0x1D907ec0CE55E7E3164Da56e50D64DC2d8933142",
++    "address": "0x94Ac3Ee177D34E4DA9D46e90DfF1bAaCe474deEb",
+     "abi": [
+         {
+             "anonymous": false,
+diff --git a/src/abis/PKPHelper.data.js b/src/abis/PKPHelper.data.js
+index e3527a4951e6e7e7530121858c8df3446f2a8a9a..160dc0ece180ac471515286920f6bc7d5fcc0467 100644
+--- a/src/abis/PKPHelper.data.js
++++ b/src/abis/PKPHelper.data.js
+@@ -2,7 +2,7 @@
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.pkpHelper = void 0;
+ exports.pkpHelper = {
+-    "address": "0xffD53EeAD24a54CA7189596eF1aa3f1369753611",
++    "address": "0x5a8e445BCFE85264566c32Be50A172F3d14F53Fc",
+     "abi": [
+         {
+             "inputs": [
+diff --git a/src/abis/PKPNFT.data.js b/src/abis/PKPNFT.data.js
+index a0586a12383052a70b806818964ca5deddf66d8e..3d01097aa8484217dab530939910314a510fc0e5 100644
+--- a/src/abis/PKPNFT.data.js
++++ b/src/abis/PKPNFT.data.js
+@@ -2,7 +2,7 @@
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.pkpNft = void 0;
+ exports.pkpNft = {
+-    "address": "0x86062B7a01B8b2e22619dBE0C15cbe3F7EBd0E92",
++    "address": "0xF5cB699652cED3781Dd75575EDBe075d6212DF98",
+     "abi": [
+         {
+             "inputs": [],
+diff --git a/src/abis/PKPNFTMetadata.data.js b/src/abis/PKPNFTMetadata.data.js
+index 6caba9663c97638c00bb483f544aeddb01701d32..6b4bd9e9be0c055101c46017dca655f53ee455f4 100644
+--- a/src/abis/PKPNFTMetadata.data.js
++++ b/src/abis/PKPNFTMetadata.data.js
+@@ -2,7 +2,7 @@
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.pkpNftMetadata = void 0;
+ exports.pkpNftMetadata = {
+-    "address": "0x46c568B561Cde9ded66Be7d8044C141481c74d0f",
++    "address": "0xfBdFFFeAd35A1A85086CfAfeF93Dd888E9527a52",
+     "abi": [
+         {
+             "inputs": [],
+diff --git a/src/abis/PKPPermissions.data.js b/src/abis/PKPPermissions.data.js
+index 5b7d216610ec91a717eb93957ed538d5d7162ebb..baf19b40715b35b367c564239847b2cdf2669951 100644
+--- a/src/abis/PKPPermissions.data.js
++++ b/src/abis/PKPPermissions.data.js
+@@ -2,7 +2,7 @@
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.pkpPermissions = void 0;
+ exports.pkpPermissions = {
+-    "address": "0x274d0C69fCfC40f71E57f81E8eA5Bd786a96B832",
++    "address": "0xE34eAB00607E6817327d575B26E8de29c320D6e9",
+     "abi": [
+         {
+             "inputs": [
+diff --git a/src/abis/PubkeyRouter.data.js b/src/abis/PubkeyRouter.data.js
+index 95b31a2bbcdc6cdcaf80220d4512f0ae97cec5f6..2cf3cf1a1c88e959e22e24f701e61a48e0f8514f 100644
+--- a/src/abis/PubkeyRouter.data.js
++++ b/src/abis/PubkeyRouter.data.js
+@@ -2,7 +2,7 @@
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.pubkeyRouter = void 0;
+ exports.pubkeyRouter = {
+-    "address": "0xEA287AF8d8835eb20175875e89576bf583539B37",
++    "address": "0xB46EbbD0F543811fC97e979fbCa62FEAB6C7E6B4",
+     "abi": [
+         {
+             "inputs": [
+diff --git a/src/abis/RateLimitNFT.data.js b/src/abis/RateLimitNFT.data.js
+index 010be999f1f297386f61da0e35087d65e79eae03..e5f2c73473a5d8cd12fce6ab09572075ee1513f0 100644
+--- a/src/abis/RateLimitNFT.data.js
++++ b/src/abis/RateLimitNFT.data.js
+@@ -2,7 +2,7 @@
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.rateLimitNft = void 0;
+ exports.rateLimitNft = {
+-    "address": "0xE094c76Ec6bad7CbA6181C8b34Bc41faC7EbdF43",
++    "address": "0x6378Bf57C2c75d9524FE2601275214C0EE3Cf1B8",
+     "abi": [
+         {
+             "inputs": [],
+diff --git a/src/abis/Staking.data.js b/src/abis/Staking.data.js
+index c7f10c0cf950397802a394d768eace965b9bb371..9990d44911783cdfa7448a7da98509172a68f18c 100644
+--- a/src/abis/Staking.data.js
++++ b/src/abis/Staking.data.js
+@@ -2,7 +2,7 @@
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.staking = void 0;
+ exports.staking = {
+-    "address": "0x091e9b0a5A404A394377d08C0Fd8C3418075e1fe",
++    "address": "0x1D672d7188D970158554F5B0965480256585A071",
+     "abi": [
+         {
+             "inputs": [
+diff --git a/src/lib/contracts-sdk.js b/src/lib/contracts-sdk.js
+index a4d48c7ea1af20882d2111276fab624328b665c7..17169a64262e9287c5560b383f1c5e1713046e7e 100644
+--- a/src/lib/contracts-sdk.js
++++ b/src/lib/contracts-sdk.js
+@@ -84,11 +84,11 @@ class LitContracts {
+                     throw new Error(msg);
+                 }
+                 const chainInfo = {
+-                    chainId: '0x13881',
+-                    chainName: 'Mumbai',
+-                    nativeCurrency: { name: 'Matic', symbol: 'MATIC', decimals: 18 },
++                    chainId: '0x2AC49',
++                    chainName: 'Chronicle - Lit Protocol Testnet',
++                    nativeCurrency: { name: 'LIT', symbol: 'LIT', decimals: 18 },
+                     rpcUrls: this.rpcs,
+-                    blockExplorerUrls: ['https://mumbai.polygonscan.com/'],
++                    blockExplorerUrls: ['https://chain.litprotocol.com'],
+                     iconUrls: ['future'],
+                 };
+                 try {
+@@ -395,7 +395,7 @@ class LitContracts {
+                     if (this.isPKP) {
+                         this.log("This is a PKP wallet, so we'll use the PKP wallet to sign the tx");
+                         this.log('...populating tx');
+-                        let tx = await this.pkpNftContract.write.populateTransaction.mintNext(2, { value: mintCost });
++                        let tx = await this.pkpNftContract.write.populateTransaction.mintNext(2, { value: mintCost.arg });
+                         this.log('tx:', tx);
+                         this.log('...signing tx');
+                         let signedTx = await this.signer.signTransaction(tx);
+@@ -413,7 +413,7 @@ class LitContracts {
+                     this.log('res:', res);
+                     let events = 'events' in res ? res.events : res.logs;
+                     let tokenIdFromEvent;
+-                    tokenIdFromEvent = events[1].topics[3];
++                    tokenIdFromEvent = this.utils.hexToDec(res.events[0].args.tokenId.toHexString());
+                     console.warn('tokenIdFromEvent:', tokenIdFromEvent);
+                     return { tx: sentTx, tokenId: tokenIdFromEvent };
+                 },
+@@ -815,7 +815,7 @@ class LitContracts {
+                     }
+                     const tx = await this.rateLimitNftContract.write.mint(timestamp, mintCost);
+                     const res = await tx.wait();
+-                    const tokenIdFromEvent = res.events[0].topics[3];
++                    const tokenIdFromEvent = res.events[0].args.tokenId;
+                     return { tx, tokenId: tokenIdFromEvent };
+                 },
+                 /**
+@@ -877,7 +877,7 @@ class LitContracts {
+         this.debug = args?.debug ?? false;
+         // if rpc is not specified, use the default rpc
+         if (!this.rpc) {
+-            this.rpc = 'https://matic-mumbai.chainstacklabs.com';
++            this.rpc = 'https://chain-rpc.litprotocol.com/http';
+         }
+         if (!this.rpcs) {
+             this.rpcs = [this.rpc];
