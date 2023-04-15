@@ -1,7 +1,7 @@
 'use client';
 
 import { IdenticonImg } from '@/components';
-import { usePKPWallet } from '@/hooks/useLit';
+import { usePKPWallet, useMintPKP } from '@/hooks/useLit';
 import { useXMTPClient } from '@/hooks/useXMTP';
 import { truncateEthAddress } from '@/utils/ethereum';
 import { LitContracts } from '@lit-protocol/contracts-sdk';
@@ -51,8 +51,12 @@ const GroupList = ({ setReaderClient, setConvo }: GroupListProps) => {
   const [currentGroupId, setCurrentGroupId] = useState<string>();
   const { createWallet } = usePKPWallet();
   const { data: signer } = useSigner();
+  const { mint } = useMintPKP();
   const writer = useXMTPClient();
-
+  const [isPending, setIsPending] = useState<boolean>(false);
+  const [currentChatId, setCurrentChatId] = useState<string>();
+  const [groupCode, setGroupCode] = useState<string>('');
+  const [groupName, setGroupName] = useState<string>('');
   const contracts = new LitContracts({ signer });
 
   useEffect(() => {
@@ -83,6 +87,7 @@ const GroupList = ({ setReaderClient, setConvo }: GroupListProps) => {
 
       setGroupAddresses(groupAddresses);
       setGroupIds(groupIds || []);
+      console.log('groupIds', groupIds);
     };
 
     fetchGroupIds();
@@ -92,9 +97,7 @@ const GroupList = ({ setReaderClient, setConvo }: GroupListProps) => {
     if (!writer) {
       return;
     }
-
     setCurrentGroupId(id);
-
     await contracts.connect();
     const pubKey = await (contracts.pkpNftContract.read as PKPNFT).getPubkey(id);
     const wallet = await createWallet(pubKey);
@@ -109,6 +112,73 @@ const GroupList = ({ setReaderClient, setConvo }: GroupListProps) => {
     setConvo(convo);
   };
 
+  const handleJoin = async () => {
+    if (!signer) {
+      return;
+    }
+    if (!groupCode) {
+      return;
+    }
+    setIsPending(true);
+
+    const contracts = new LitContracts({ signer });
+    await contracts.connect();
+    const pubKey = await (contracts.pkpNftContract.read as PKPNFT).getPubkey(groupCode);
+    const wallet = await createWallet(pubKey);
+    if (!wallet) {
+      setIsPending(false);
+      return;
+    }
+    console.log('wallet', wallet);
+
+    setCurrentChatId(groupCode);
+
+    try {
+      const reader = await Client.create(wallet, { env: 'production' });
+      setReaderClient(reader);
+    } catch (e) {
+      console.log('typeof e', typeof e);
+      console.log(e);
+    }
+
+    const writer = await Client.create(signer, { env: 'production' });
+    const convo = await writer.conversations.newConversation(wallet.address);
+    setConvo(convo);
+    setGroupCode('');
+    setIsPending(false);
+  };
+
+  const handleCreate = async () => {
+    if (!signer) {
+      return;
+    }
+    setIsPending(true);
+
+    const pkpToken = await mint(signer);
+
+    if (pkpToken) {
+      // create reader client
+      const wallet = await createWallet(pkpToken.pubKey);
+      if (!wallet) {
+        return;
+      }
+      setCurrentChatId(pkpToken.tokenId);
+
+      console.log('wallet', wallet);
+
+      const reader = await Client.create(wallet, { env: 'production' });
+      setReaderClient(reader);
+
+      const writer = await Client.create(signer, { env: 'production' });
+      const convo = await writer.conversations.newConversation(wallet.address);
+      console.log('conve', convo);
+      console.log('writer', writer);
+      setConvo(convo);
+    }
+    setGroupName('');
+    setIsPending(false);
+  };
+
   return (
     <>
       <div className='p-4 flex justify-between items-center'>
@@ -119,8 +189,16 @@ const GroupList = ({ setReaderClient, setConvo }: GroupListProps) => {
               ✕
             </label>
             <h3 className='text-lg font-bold'>Join Group</h3>
-            <input type='text' placeholder='Group Code' className='input w-full max-w-xs mt-2' />
-            <button className='btn ml-4'>Join</button>
+            <input
+              onChange={(e) => setGroupCode(e.target.value)}
+              value={groupCode}
+              type='text'
+              placeholder='Group Code'
+              className='input w-full max-w-xs mt-2'
+            />
+            <button onClick={handleJoin} className='btn ml-4'>
+              Join
+            </button>
           </div>
         </div>
         <input type='checkbox' id='modal-2' className='modal-toggle' />
@@ -130,8 +208,16 @@ const GroupList = ({ setReaderClient, setConvo }: GroupListProps) => {
               ✕
             </label>
             <h3 className='text-lg font-bold'>Create Group</h3>
-            <input type='text' placeholder='Group Name' className='input w-full max-w-xs mt-2' />
-            <button className='btn ml-4'>Join</button>
+            <input
+              onChange={(e) => setGroupName(e.target.value)}
+              value={groupName}
+              type='text'
+              placeholder='Group Name'
+              className='input w-full max-w-xs mt-2'
+            />
+            <button onClick={handleCreate} className='btn ml-4'>
+              Create
+            </button>
           </div>
         </div>
         <h2 className='text-lg font-bold'>Group List</h2>
@@ -145,12 +231,12 @@ const GroupList = ({ setReaderClient, setConvo }: GroupListProps) => {
           >
             <li>
               <label htmlFor='modal-1'>
-                <button>Create</button>
+                <button>Join</button>
               </label>
             </li>
             <li>
               <label htmlFor='modal-2'>
-                <button>Join</button>
+                <button>Create</button>
               </label>
             </li>
           </ul>
