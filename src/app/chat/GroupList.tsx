@@ -64,26 +64,45 @@ const GroupList = ({ setReaderClient, setConvo }: GroupListProps) => {
       return;
     }
     const fetchGroupIds = async () => {
+      await contracts.connect();
       const bytesAddress = utils.solidityPack(['address'], [writer.address]);
       const authMethodId = utils.keccak256(
-        utils.defaultAbiCoder.encode(['uint8, bytes'], [1, bytesAddress]),
+        utils.defaultAbiCoder.encode(['uint8', 'bytes'], [1, bytesAddress]),
       );
 
       const tokenIds = await (
         contracts.pkpPermissionsContract.read as PKPPermissions
       ).getTokenIdsForAuthMethod(1, new Bytes(utils.toUtf8Bytes(authMethodId)));
 
+      const balance = await (contracts.pkpNftContract.read as PKPNFT).balanceOf(writer.address);
+      for (let i = 0; i < balance.toNumber(); i++) {
+        const tokenIdByOwner = await (contracts.pkpNftContract.read as PKPNFT).tokenOfOwnerByIndex(
+          writer.address,
+          i,
+        );
+        console.log('tokenIdByOwner', tokenIdByOwner)
+        if (!tokenIds.includes(tokenIdByOwner)) {
+          tokenIds.push(tokenIdByOwner);
+        }
+      }
+      console.log('tokenIds', tokenIds)
+
       const pkpAddresses = await Promise.all(
         tokenIds.map(async (id: BigNumber) => {
           return await (contracts.pkpNftContract.read as PKPNFT).getEthAddress(id);
         }),
       );
+      console.log('pkpAddresses', pkpAddresses)
 
       const convoAddrs = (await writer?.conversations.list()).map((c) => c.peerAddress);
+      console.log('convoAddrs', convoAddrs)
+
       const groupIds = tokenIds
         ?.filter((id, i) => convoAddrs.includes(pkpAddresses[i]))
         .map((id) => id.toString());
+      console.log('groupIds', groupIds)
       const groupAddresses = pkpAddresses.filter((addr) => convoAddrs.includes(addr));
+      console.log('groupAddresses', groupAddresses)
 
       setGroupAddresses(groupAddresses);
       setGroupIds(groupIds || []);
@@ -113,7 +132,7 @@ const GroupList = ({ setReaderClient, setConvo }: GroupListProps) => {
   };
 
   const handleJoin = async () => {
-    if (!signer) {
+    if (!signer || !writer) {
       return;
     }
     if (!groupCode) {
@@ -141,7 +160,6 @@ const GroupList = ({ setReaderClient, setConvo }: GroupListProps) => {
       console.log(e);
     }
 
-    const writer = await Client.create(signer, { env: 'production' });
     const convo = await writer.conversations.newConversation(wallet.address);
     setConvo(convo);
     setGroupCode('');
@@ -149,7 +167,7 @@ const GroupList = ({ setReaderClient, setConvo }: GroupListProps) => {
   };
 
   const handleCreate = async () => {
-    if (!signer) {
+    if (!signer || !writer) {
       return;
     }
     setIsPending(true);
@@ -169,7 +187,6 @@ const GroupList = ({ setReaderClient, setConvo }: GroupListProps) => {
       const reader = await Client.create(wallet, { env: 'production' });
       setReaderClient(reader);
 
-      const writer = await Client.create(signer, { env: 'production' });
       const convo = await writer.conversations.newConversation(wallet.address);
       console.log('conve', convo);
       console.log('writer', writer);
