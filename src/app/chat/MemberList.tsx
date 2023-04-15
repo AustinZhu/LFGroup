@@ -22,7 +22,7 @@ const MemberList = ({ group, setGroup }: MemberListProps) => {
       image: string;
     }[]
   >([]);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [, setIsAdmin] = useState(false);
   const { key } = usePush();
   const [showCard, setShowCard] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<number>(-1);
@@ -36,7 +36,7 @@ const MemberList = ({ group, setGroup }: MemberListProps) => {
       group.members
         .filter((member) => member.isAdmin)
         .map((member) => member.wallet)
-        .includes(address),
+        .includes(address) || group.groupCreator === address,
     );
   }, [address, group]);
 

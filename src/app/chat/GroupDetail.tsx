@@ -5,7 +5,7 @@ import { usePush } from '@/hooks/usePush';
 import { useProfile } from '@lens-protocol/react-web';
 import * as PushAPI from '@pushprotocol/restapi';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
 import MemberList from './MemberList';
 import Messages from './Messages';
@@ -19,9 +19,21 @@ export default function GroupDetail({ currentGroup, setGroup }: GroupDetailProps
   const [showUserInfo, setShowUserInfo] = useState(false);
   const [newMember, setNewMember] = useState<string>('');
   const { data: profile } = useProfile({ handle: newMember});
+  const [, setIsAdmin] = useState(false);
 
   const { address } = useAccount();
   const { key } = usePush();
+
+  useEffect(() => {
+    if (!currentGroup || !address) return;
+
+    setIsAdmin(
+      currentGroup.members
+        .filter((member) => member.isAdmin)
+        .map((member) => member.wallet)
+        .includes(address) || currentGroup.groupCreator === address,
+    );
+  }, [address, currentGroup]);
 
   const handleUserInfoClick = () => {
     setShowUserInfo(!showUserInfo);

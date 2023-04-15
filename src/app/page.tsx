@@ -1,6 +1,5 @@
 'use client';
 
-import { useLitConnect } from '@/hooks/useLit';
 import { usePushConnect } from '@/hooks/usePush';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import '@rainbow-me/rainbowkit/styles.css';
@@ -14,18 +13,16 @@ const queryClient = new QueryClient();
 const Home = () => {
   const { data: signer } = useSigner();
   const router = useRouter();
-  const { connect: connectLit } = useLitConnect();
   const { connect: connectPush } = usePushConnect();
 
   useEffect(() => {
     (async () => {
       if (signer) {
-        await connectLit(signer);
         await connectPush(signer);
         router.push('/chat');
       }
     })();
-  }, [connectLit, connectPush, router, signer]);
+  }, [connectPush, router, signer]);
 
   return (
     <QueryClientProvider client={queryClient}>

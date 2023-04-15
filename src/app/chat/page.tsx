@@ -1,7 +1,6 @@
 'use client';
 
 import { IdenticonImg } from '@/components';
-import { useLitDisconnect } from '@/hooks/useLit';
 import * as PushAPI from '@pushprotocol/restapi';
 import Image from 'next/image';
 import { useState } from 'react';
@@ -12,7 +11,6 @@ import GroupList from './GroupList';
 const ChatPage = () => {
   const { address } = useAccount();
   const { disconnectAsync: disconnectWallet } = useDisconnect();
-  const { disconnect: disconnectLit } = useLitDisconnect();
 
   const [currentGroup, setCurrentGroup] = useState<PushAPI.GroupDTO>();
 
@@ -21,7 +19,6 @@ const ChatPage = () => {
   }
 
   const handleLogout = async () => {
-    await disconnectLit();
     await disconnectWallet();
   };
 
