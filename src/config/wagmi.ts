@@ -1,6 +1,6 @@
 import { getDefaultWallets } from '@rainbow-me/rainbowkit';
 import { configureChains, createClient } from 'wagmi';
-import { Chain } from 'wagmi/chains';
+import { Chain, polygon } from 'wagmi/chains';
 import { publicProvider } from 'wagmi/providers/public';
 
 export const chronicle: Chain = {
@@ -29,7 +29,7 @@ export const chronicle: Chain = {
 };
 
 export const { chains, provider, webSocketProvider } = configureChains(
-  [chronicle],
+  [polygon],
   [publicProvider()],
 );
 

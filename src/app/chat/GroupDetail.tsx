@@ -1,28 +1,62 @@
 'use client';
 
-import { Client, Conversation } from '@xmtp/xmtp-js';
 import { IdenticonImg } from '@/components';
+import { usePush } from '@/hooks/usePush';
+import { useProfile } from '@lens-protocol/react-web';
+import * as PushAPI from '@pushprotocol/restapi';
 import Image from 'next/image';
-import MemberList from './MemberList';
-import Messages from './Messages';
 import { useState } from 'react';
 import { useAccount } from 'wagmi';
+import MemberList from './MemberList';
+import Messages from './Messages';
 
 interface GroupDetailProps {
-  readerClient?: Client;
-  convo?: Conversation;
-  chatId?: string;
+  currentGroup?: PushAPI.GroupDTO;
+  setGroup: (group?: PushAPI.GroupDTO) => void;
 }
 
-export default function GroupDetail({ readerClient, chatId }: GroupDetailProps) {
+export default function GroupDetail({ currentGroup, setGroup }: GroupDetailProps) {
   const [showUserInfo, setShowUserInfo] = useState(false);
+  const [newMember, setNewMember] = useState<string>('');
+  const { data: profile } = useProfile({ handle: newMember});
+
   const { address } = useAccount();
+  const { key } = usePush();
+
   const handleUserInfoClick = () => {
     setShowUserInfo(!showUserInfo);
   };
   if (!address) {
     return null;
   }
+
+  const handleAddMember = async () => {
+    if (!currentGroup) {
+      return;
+    }
+
+    let newMem = newMember;
+    if (profile) {
+      newMem = profile.ownedBy;
+    }
+    const currentMembers = currentGroup.members.map((member) => member.wallet);
+    const currentAdmins = currentGroup.members
+      .filter((member) => member.isAdmin)
+      .map((member) => member.wallet);
+    const response = await PushAPI.chat.updateGroup({
+      chatId: currentGroup.chatId,
+      groupName: currentGroup.groupName,
+      groupDescription: currentGroup.groupDescription || '',
+      members: [...currentMembers, newMem],
+      groupImage: currentGroup.groupImage || '',
+      admins: [...currentAdmins],
+      account: address,
+      pgpPrivateKey: key,
+    });
+
+    setGroup(response)
+  };
+
   return (
     <div className='divide-y flex flex-col h-full'>
       <input type='checkbox' id='my-modal-3' className='modal-toggle' />
@@ -32,8 +66,16 @@ export default function GroupDetail({ readerClient, chatId }: GroupDetailProps) 
             ✕
           </label>
           <h3 className='text-lg font-bold'>Add Member</h3>
-          <input type='text' placeholder='Wallet Address' className='input w-full max-w-xs mt-2' />
-          <button className='btn ml-4'>Button</button>
+          <input
+            type='text'
+            value={newMember}
+            onChange={(e) => setNewMember(e.target.value)}
+            placeholder='Wallet Address'
+            className='input w-full max-w-xs mt-2'
+          />
+          <button className='btn ml-4' onClick={handleAddMember}>
+            Add
+          </button>
         </div>
       </div>
       <input type='checkbox' id='modal-4' className='modal-toggle' />
@@ -52,8 +94,8 @@ export default function GroupDetail({ readerClient, chatId }: GroupDetailProps) 
       </div>
       <div className='p-4 flex justify-between items-center'>
         <div className='flex items-center'>
-          <h2 className='text-lg font-bold mr-2'>Group Name</h2>
-          <h2 className='text-lg font-bold'>(42)</h2>
+          <h2 className='text-lg font-bold mr-2'>{currentGroup?.groupName}</h2>
+          <h2 className='text-lg font-bold'>{`(${currentGroup?.members.length})`}</h2>
         </div>
         <div className='flex items-center'>
           <label htmlFor='my-modal-3'>
@@ -71,17 +113,18 @@ export default function GroupDetail({ readerClient, chatId }: GroupDetailProps) 
       <div className='flex-grow flex flex-col justify-between'>
         <div className='flex h-full divide-x'>
           <div className='w-3/4'>
-            <Messages readerClient={readerClient} />
+            <Messages group={currentGroup} />
           </div>
           <div className='p-1 w-1/4'>
-            <MemberList chatId={chatId} />
+            <MemberList group={currentGroup} setGroup={setGroup} />
           </div>
         </div>
         <div
-          className={`w-1/4 ${showUserInfo
-            ? 'fixed z-10 top-0 right-0 h-screen bg-white p-4 shadow-lg flex-grow'
-            : 'hidden'
-            }`}
+          className={`w-1/4 ${
+            showUserInfo
+              ? 'fixed z-10 top-0 right-0 h-screen bg-white p-4 shadow-lg flex-grow'
+              : 'hidden'
+          }`}
         >
           <div className='flex flex-col items-center justify-center ml-4 mt-auto flex-grow'>
             <button

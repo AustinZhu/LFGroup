@@ -1,8 +1,8 @@
 'use client';
+
 import { IdenticonImg } from '@/components';
 import { useLitDisconnect } from '@/hooks/useLit';
-import { useXMTPDisconnect } from '@/hooks/useXMTP';
-import { Client, Conversation } from '@xmtp/xmtp-js';
+import * as PushAPI from '@pushprotocol/restapi';
 import Image from 'next/image';
 import { useState } from 'react';
 import { useAccount, useDisconnect } from 'wagmi';
@@ -13,18 +13,14 @@ const ChatPage = () => {
   const { address } = useAccount();
   const { disconnectAsync: disconnectWallet } = useDisconnect();
   const { disconnect: disconnectLit } = useLitDisconnect();
-  const { disconnect: disconnectXMTP } = useXMTPDisconnect();
 
-  const [currentGroup, setCurrentGroup] = useState<Client>();
-  const [currentConvo, setCurrentConvo] = useState<Conversation>();
-  const [currentChatId, setCurrentChatId] = useState<string>();
+  const [currentGroup, setCurrentGroup] = useState<PushAPI.GroupDTO>();
 
   if (!address) {
     return null;
   }
 
   const handleLogout = async () => {
-    await disconnectXMTP();
     await disconnectLit();
     await disconnectWallet();
   };
@@ -45,10 +41,10 @@ const ChatPage = () => {
         </a>
       </div>
       <div className='w-1/4 bg-white'>
-        <GroupList setReaderClient={setCurrentGroup} setConvo={setCurrentConvo} setChatId={setCurrentChatId}/>
+        <GroupList setGroup={setCurrentGroup}/>
       </div>
       <div className='flex-grow bg-white'>
-        <GroupDetail readerClient={currentGroup} convo={currentConvo} chatId={currentChatId} />
+        <GroupDetail currentGroup={currentGroup} setGroup={setCurrentGroup} />
       </div>
     </div>
   );

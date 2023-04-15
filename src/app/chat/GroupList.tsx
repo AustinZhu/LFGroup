@@ -1,200 +1,91 @@
 'use client';
 
 import { IdenticonImg } from '@/components';
-import { usePKPWallet, useMintPKP } from '@/hooks/useLit';
-import { useXMTPClient } from '@/hooks/useXMTP';
-import { truncateEthAddress } from '@/utils/ethereum';
-import { LitContracts } from '@lit-protocol/contracts-sdk';
-import { Arrayish, PKPNFT } from '@lit-protocol/contracts-sdk/src/abis/PKPNFT';
-import { PKPPermissions } from '@lit-protocol/contracts-sdk/src/abis/PKPPermissions';
-import { Client, Conversation } from '@xmtp/xmtp-js';
-import { BigNumber, utils } from 'ethers';
+import { usePush } from '@/hooks/usePush';
+import * as PushAPI from '@pushprotocol/restapi';
+import { GroupDTO } from '@pushprotocol/restapi';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
-import { useSigner } from 'wagmi';
-
-const mockGroups: string[] = [
-  '12214489956700739559714548033094819536594287450588618676882006260107778902796',
-];
-
-class Bytes implements Arrayish {
-  readonly bytes: Uint8Array;
-
-  constructor(bytes: Uint8Array) {
-    this.bytes = bytes;
-  }
-
-  toHexString(): string {
-    return utils.hexlify(this.bytes);
-  }
-
-  slice(start?: number, end?: number): Bytes {
-    return new Bytes(this.bytes.slice(start, end));
-  }
-
-  get length(): number {
-    return this.bytes.length;
-  }
-
-  [index: number]: number;
-}
+import { useAccount } from 'wagmi';
 
 interface GroupListProps {
-  setReaderClient: (client: Client) => void;
-  setConvo: (convo?: Conversation) => void;
-  setChatId: (chatId?: string) => void;
+  setGroup: (group?: GroupDTO) => void;
 }
 
-const GroupList = ({ setReaderClient, setConvo }: GroupListProps) => {
-  const [groupIds, setGroupIds] = useState<string[]>([]);
-  const [groupAddresses, setGroupAddresses] = useState<string[]>([]);
-  const [currentGroupId, setCurrentGroupId] = useState<string>();
-  const { createWallet } = usePKPWallet();
-  const { data: signer } = useSigner();
-  const { mint } = useMintPKP();
-  const writer = useXMTPClient();
-  const [isPending, setIsPending] = useState<boolean>(false);
-  const [currentChatId, setCurrentChatId] = useState<string>();
-  const [groupCode, setGroupCode] = useState<string>('');
+const GroupList = ({ setGroup }: GroupListProps) => {
+  const { address } = useAccount();
+  const { key } = usePush();
+  const [currentGroup, setCurrentGroup] = useState<number>();
+  const [groups, setGroups] = useState<PushAPI.GroupDTO[]>([]);
+  const [latestMsgs, setLatestMsgs] = useState<{ msg: string; sent: Date }[]>([]);
   const [groupName, setGroupName] = useState<string>('');
-  const contracts = new LitContracts({ signer });
+  const [groupId, setGroupId] = useState<string>('');
 
   useEffect(() => {
-    if (!writer) {
-      return;
-    }
-    const fetchGroupIds = async () => {
-      await contracts.connect();
-      const bytesAddress = utils.solidityPack(['address'], [writer.address]);
-      const authMethodId = utils.keccak256(
-        utils.defaultAbiCoder.encode(['uint8', 'bytes'], [1, bytesAddress]),
-      );
+    const fetchGroups = async () => {
+      const chats = await PushAPI.chat.chats({
+        account: `eip155:${address}`,
+        toDecrypt: true,
+        pgpPrivateKey: key,
+      });
 
-      let tokenIds = await (
-        contracts.pkpPermissionsContract.read as PKPPermissions
-      ).getTokenIdsForAuthMethod(1, new Bytes(utils.toUtf8Bytes(authMethodId)));
-
-      const balance = await (contracts.pkpNftContract.read as PKPNFT).balanceOf(writer.address);
-      const tokenIdsByOwner = [];
-      for (let i = 0; i < balance.toNumber(); i++) {
-        const tokenIdByOwner = await (contracts.pkpNftContract.read as PKPNFT).tokenOfOwnerByIndex(
-          writer.address,
-          i,
+      const groups = chats
+        .filter((chat) => chat.chatId !== undefined)
+        .map(
+          async (chat) =>
+            await PushAPI.chat.getGroup({
+              chatId: chat.chatId!,
+            }),
         );
-        if (!tokenIds.includes(tokenIdByOwner)) {
-          tokenIdsByOwner.push(tokenIdByOwner);
+
+      const resolvedGroups = await Promise.all(groups);
+      setGroups(resolvedGroups);
+
+      const latests = resolvedGroups.map(async (group) => {
+        const conversationHash = await PushAPI.chat.conversationHash({
+          account: `eip155:${address}`,
+          conversationId: group.chatId,
+        });
+        const latest = await PushAPI.chat.latest({
+          threadhash: conversationHash.threadHash,
+          account: `eip155:${address}`,
+          toDecrypt: true,
+          pgpPrivateKey: key,
+        });
+        return {
+          msg: latest[0]?.messageContent || '',
+          sent: new Date(latest[0]?.timestamp || 0),
         }
-      }
-
-      tokenIds = [...tokenIds, ...tokenIdsByOwner];
-
-      const pkpAddresses = await Promise.all(
-        tokenIds.map(async (id: BigNumber) => {
-          return await (contracts.pkpNftContract.read as PKPNFT).getEthAddress(id);
-        }),
-      );
-      console.log('pkpAddresses', pkpAddresses)
-
-      const convoAddrs = (await writer?.conversations.list()).map((c) => c.peerAddress);
-      console.log('convoAddrs', convoAddrs)
-
-      const groupIds = tokenIds
-        ?.filter((id, i) => convoAddrs.includes(pkpAddresses[i]))
-        .map((id) => id.toString());
-      console.log('groupIds', groupIds)
-      const groupAddresses = pkpAddresses.filter((addr) => convoAddrs.includes(addr));
-      console.log('groupAddresses', groupAddresses)
-
-      setGroupAddresses(groupAddresses);
-      setGroupIds(groupIds || []);
-      console.log('groupIds', groupIds);
+      });
+      const resolvedMsgs = await Promise.all(latests);
+      setLatestMsgs(resolvedMsgs);
     };
 
-    fetchGroupIds();
-  }, [writer]);
+    fetchGroups();
+  }, [address, key, latestMsgs]);
 
-  const handleClick = async (id: string) => {
-    if (!writer) {
-      return;
-    }
-    setCurrentGroupId(id);
-    await contracts.connect();
-    const pubKey = await (contracts.pkpNftContract.read as PKPNFT).getPubkey(id);
-    const wallet = await createWallet(pubKey);
-    if (!wallet) {
-      return;
-    }
-
-    const reader = await Client.create(wallet, { env: 'production' });
-    setReaderClient(reader);
-
-    const convo = await writer.conversations.newConversation(wallet.address);
-    setConvo(convo);
-  };
-
-  const handleJoin = async () => {
-    if (!signer || !writer) {
-      return;
-    }
-    if (!groupCode) {
-      return;
-    }
-    setIsPending(true);
-
-    const contracts = new LitContracts({ signer });
-    await contracts.connect();
-    const pubKey = await (contracts.pkpNftContract.read as PKPNFT).getPubkey(groupCode);
-    const wallet = await createWallet(pubKey);
-    if (!wallet) {
-      setIsPending(false);
-      return;
-    }
-    console.log('wallet', wallet);
-
-    setCurrentChatId(groupCode);
-
-    try {
-      const reader = await Client.create(wallet, { env: 'production' });
-      setReaderClient(reader);
-    } catch (e) {
-      console.log('typeof e', typeof e);
-      console.log(e);
-    }
-
-    const convo = await writer.conversations.newConversation(wallet.address);
-    setConvo(convo);
-    setGroupCode('');
-    setIsPending(false);
+  const handleClick = async (id: number) => {
+    setCurrentGroup(id);
+    setGroup(groups[id]);
   };
 
   const handleCreate = async () => {
-    if (!signer || !writer) {
+    if (!address) {
       return;
     }
-    setIsPending(true);
+    const response = await PushAPI.chat.createGroup({
+      groupName,
+      groupImage: 'https://avatars.githubusercontent.com/u/64157541?s=200&v=4',
+      groupDescription: 'test',
+      members: [],
+      admins: [],
+      isPublic: true,
+      account: address,
+      pgpPrivateKey: key,
+    });
 
-    const pkpToken = await mint(signer);
-
-    if (pkpToken) {
-      // create reader client
-      const wallet = await createWallet(pkpToken.pubKey);
-      if (!wallet) {
-        return;
-      }
-      setCurrentChatId(pkpToken.tokenId);
-
-      console.log('wallet', wallet);
-
-      const reader = await Client.create(wallet, { env: 'production' });
-      setReaderClient(reader);
-
-      const convo = await writer.conversations.newConversation(wallet.address);
-      console.log('conve', convo);
-      console.log('writer', writer);
-      setConvo(convo);
-    }
-    setGroupName('');
-    setIsPending(false);
+    setGroups([...groups, response]);
+    setCurrentGroup(groups.length);
   };
 
   return (
@@ -208,15 +99,12 @@ const GroupList = ({ setReaderClient, setConvo }: GroupListProps) => {
             </label>
             <h3 className='text-lg font-bold'>Join Group</h3>
             <input
-              onChange={(e) => setGroupCode(e.target.value)}
-              value={groupCode}
+              onChange={(e) => setGroupId(e.target.value)}
+              value={groupId}
               type='text'
-              placeholder='Group Code'
+              placeholder='Group Id'
               className='input w-full max-w-xs mt-2'
             />
-            <button onClick={handleJoin} className='btn ml-4'>
-              Join
-            </button>
           </div>
         </div>
         <input type='checkbox' id='modal-2' className='modal-toggle' />
@@ -226,68 +114,57 @@ const GroupList = ({ setReaderClient, setConvo }: GroupListProps) => {
               ✕
             </label>
             <h3 className='text-lg font-bold'>Create Group</h3>
-            <input
-              onChange={(e) => setGroupName(e.target.value)}
-              value={groupName}
-              type='text'
-              placeholder='Group Name'
-              className='input w-full max-w-xs mt-2'
-            />
-            <button onClick={handleCreate} className='btn ml-4'>
-              Create
-            </button>
+            <div className='modal-action flex flex-row justify-center items-center'>
+              <input
+                onChange={(e) => setGroupName(e.target.value)}
+                value={groupName}
+                type='text'
+                placeholder='Group Name'
+                className='input w-full max-w-xs'
+              />
+              <label onClick={handleCreate} htmlFor='modal-2' className='btn'>
+                Create
+              </label>
+            </div>
           </div>
         </div>
         <h2 className='text-lg font-bold'>Group List</h2>
-        <div className='dropdown'>
-          <label tabIndex={0} className='btn bg-gray-200 border-0 hover:bg-gray-400'>
-            <Image alt='Add' src='/plus.svg' width={24} height={24} className='' />
-          </label>
-          <ul
-            tabIndex={0}
-            className='dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52'
-          >
-            <li>
-              <label htmlFor='modal-1'>
-                <button>Join</button>
-              </label>
-            </li>
-            <li>
-              <label htmlFor='modal-2'>
-                <button>Create</button>
-              </label>
-            </li>
-          </ul>
-        </div>
+        <label className='btn' htmlFor='modal-2'>
+          <Image alt='Add' src='/plus.svg' width={24} height={24} className='' />
+        </label>
       </div>
       <div>
-        {groupIds.map((id, i) => (
-          <div key={id} className='group' onClick={() => handleClick(id)}>
+        {groups.map((group, i) => (
+          <div key={i} className='group' onClick={() => handleClick(i)}>
             <div
-              className={`flex items-center p-4 group-hover:bg-[#0BA360] ${id === currentGroupId ? 'bg-[#0BA360]' : ''
-                }`}
+              className={`flex items-center p-4 group-hover:bg-[#0BA360] ${
+                i === currentGroup ? 'bg-[#0BA360]' : ''
+              }`}
             >
-              <IdenticonImg username={groupAddresses[i]} width={40} height={40} className='mr-4' />
+              <IdenticonImg username={group.chatId} width={40} height={40} className='mr-4' />
               <div className='flex flex-col w-full'>
                 <div className='flex items-center'>
                   <p
-                    className={`font-bold group-hover:text-white ${id === currentGroupId ? 'text-white' : ''
-                      }`}
+                    className={`font-bold group-hover:text-white ${
+                      i === currentGroup ? 'text-white' : ''
+                    }`}
                   >
-                    {truncateEthAddress(groupAddresses[i])}
+                    {group.groupName}
                   </p>
                   <span
-                    className={`ml-auto group-hover:opacity-50 group-hover:text-gray-100 text-sm ${id === currentGroupId ? 'text-gray-100 opacity-50' : 'text-gray-300'
-                      }`}
+                    className={`ml-auto group-hover:opacity-50 group-hover:text-gray-100 text-sm ${
+                      i === currentGroup ? 'text-gray-100 opacity-50' : 'text-gray-300'
+                    }`}
                   >
-                    10:30 AM
+                    {latestMsgs[i]?.sent.toLocaleTimeString()}
                   </span>
                 </div>
                 <p
-                  className={`group-hover:opacity-75 group-hover:text-gray-200 ${id === currentGroupId ? 'opacity-75 text-gray-200' : 'text-gray-500'
-                    }`}
+                  className={`group-hover:opacity-75 group-hover:text-gray-200 ${
+                    i === currentGroup ? 'opacity-75 text-gray-200' : 'text-gray-500'
+                  }`}
                 >
-                  {'Hello, World!'}
+                  {latestMsgs[i]?.msg}
                 </p>
               </div>
             </div>

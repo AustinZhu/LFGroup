@@ -1,44 +1,76 @@
 'use client';
 
-import Image from 'next/image';
 import { IdenticonImg } from '@/components';
-import { usePKPGetPermissions } from '@/hooks/useLit';
+import { usePush } from '@/hooks/usePush';
 import { truncateEthAddress } from '@/utils/ethereum';
+import * as PushAPI from '@pushprotocol/restapi';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
 
-const mockMembers = [
-  '0x0000002000002000002000002000002000002000',
-  '0x0000002000002000002000002000002000002001',
-];
-
 interface MemberListProps {
-  chatId?: string;
+  group?: PushAPI.GroupDTO;
+  setGroup: (group?: PushAPI.GroupDTO) => void;
 }
 
-const MemberList = ({ chatId }: MemberListProps) => {
-  const [members, setMembers] = useState<string[]>(mockMembers);
+const MemberList = ({ group, setGroup }: MemberListProps) => {
+  const [members, setMembers] = useState<
+    {
+      wallet: string;
+      publicKey: string;
+      isAdmin: boolean;
+      image: string;
+    }[]
+  >([]);
   const [isAdmin, setIsAdmin] = useState(false);
+  const { key } = usePush();
   const [showCard, setShowCard] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<number>(-1);
   const { address } = useAccount();
-  const { getPermissions } = usePKPGetPermissions();
 
   useEffect(() => {
-    if (!chatId) return;
-    const getMembers = async () => {
-      const members = await getPermissions(chatId);
-      if (!members) return;
-      setIsAdmin(members[0] === address);
-      setMembers(members);
-    };
-    getMembers();
-  }, [address, chatId, getPermissions]);
+    if (!group || !address) return;
+
+    setMembers(group.members);
+    setIsAdmin(
+      group.members
+        .filter((member) => member.isAdmin)
+        .map((member) => member.wallet)
+        .includes(address),
+    );
+  }, [address, group]);
 
   const handleShowCard = (id: number) => {
     setShowCard(!showCard);
     setCurrentUserId(id);
   };
+
+  const handleRemoveMember = async () => {
+    if (!group) {
+      return;
+    }
+
+    const newMem = group.members
+      .filter((member) => member.wallet !== members[currentUserId].wallet)
+      .map((member) => member.wallet);
+    const currentAdmins = group.members
+      .filter((member) => member.isAdmin)
+      .map((member) => member.wallet);
+
+    const response = await PushAPI.chat.updateGroup({
+      chatId: group.chatId,
+      groupName: group.groupName,
+      groupDescription: group.groupDescription || '',
+      members: [...newMem],
+      groupImage: group.groupImage || '',
+      admins: [...currentAdmins],
+      account: address,
+      pgpPrivateKey: key,
+    });
+
+    setGroup(response);
+  };
+
   return (
     <div className='px-2 relative'>
       <h3 className='text-lg font-bold text-gray-700'>Members</h3>
@@ -52,22 +84,24 @@ const MemberList = ({ chatId }: MemberListProps) => {
           <p className='mb-2'>Are you sure you want to remove this member?</p>
           <div className='flex justify-end'>
             <button className='btn btn-active btn-ghost'>Cancel</button>
-            <button className='btn btn-active btn-secondary ml-2 '>Remove</button>
+            <button className='btn btn-active btn-secondary ml-2' onClick={handleRemoveMember}>
+              Remove
+            </button>
           </div>
         </div>
       </div>
       {members.map((member, index) => (
-        <div key={member} className='relative group'>
+        <div key={index} className='relative group'>
           <div className='flex items-center mb-4 px-2 py-2 rounded-lg hover:bg-gray-200'>
             <div className='w-10 rounded-full'>
               <IdenticonImg
-                username={member}
+                username={member.wallet}
                 width={50}
                 height={50}
                 className='rounded-full mr-4'
               />
             </div>
-            <p className='text-gray-700 ml-1'>{truncateEthAddress(member)}</p>
+            <p className='text-gray-700 ml-1'>{truncateEthAddress(member.wallet)}</p>
             <div className='hidden group-hover:flex ml-auto'>
               <button
                 className='bg-gray-200 p-2 hover:bg-gray-300'
@@ -83,12 +117,14 @@ const MemberList = ({ chatId }: MemberListProps) => {
                 <div className='flex flex-col items-center'>
                   <div className='flex items-center'>
                     <IdenticonImg
-                      username={member}
+                      username={member.wallet}
                       width={50}
                       height={50}
                       className='rounded-full mr-2'
                     />
-                    <p className='text-gray-700 font-medium ml-5'>{truncateEthAddress(member)}</p>
+                    <p className='text-gray-700 font-medium ml-5'>
+                      {truncateEthAddress(member.wallet)}
+                    </p>
                   </div>
                   <div className='my-2 border-b w-full'></div>
                   <p className='text-gray-700 items-center'>0x00000000000000000</p>

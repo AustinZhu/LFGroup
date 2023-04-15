@@ -1,86 +1,95 @@
 'use client';
 
 import { IdenticonImg } from '@/components';
+import { usePush } from '@/hooks/usePush';
 import { truncateEthAddress } from '@/utils/ethereum';
-import { Client, DecodedMessage } from '@xmtp/xmtp-js';
+import * as PushAPI from '@pushprotocol/restapi';
+import { IMessageIPFS } from '@pushprotocol/restapi';
+import { Wallet } from 'ethers';
 import { useEffect, useState } from 'react';
+import { useAccount, useSigner } from 'wagmi';
 
 interface MessagesProps {
-  readerClient?: Client;
+  group?: PushAPI.GroupDTO;
 }
 
-export default function Messages({ readerClient }: MessagesProps) {
-  const [messages, setMessages] = useState<DecodedMessage[]>([
-    {
-      id: '12321',
-      senderAddress: '0x0000000000000000000000000000000000000000',
-      content: 'Hello World',
-      sent: new Date(),
-    } as DecodedMessage,
-  ]);
+export default function Messages({ group }: MessagesProps) {
+  const [messages, setMessages] = useState<IMessageIPFS[]>([]);
+  const { address } = useAccount();
+  const { data: signer } = useSigner();
+  const { key } = usePush();
   const [message, setMessage] = useState('');
-  const accountId = '0x0000000000000000000000000000000000000001';
+
   useEffect(() => {
-    if (!readerClient) return;
+    if (!group || !address) return;
 
     const streamMessages = async () => {
-      const newStream = await readerClient.conversations.streamAllMessages();
-      for await (const msg of newStream) {
-        setMessages((prevMessages) => {
-          const messages = [...prevMessages];
-          messages.push(msg);
-          return messages;
-        });
-      }
-    };
-    streamMessages();
-  }, [readerClient?.conversations]);
-
-  const handleSend = () => {
-    if (message.length > 0) {
-      setMessages((prevMessages) => {
-        const messages = [...prevMessages];
-        messages.push({
-          id: '12321',
-          senderAddress: '0x0000000000000000000000000000000000000001',
-          content: message,
-          sent: new Date(),
-        } as DecodedMessage);
-        return messages;
+      const conversationHash = await PushAPI.chat.conversationHash({
+        account: `eip155:${address}`,
+        conversationId: group.chatId,
       });
-      setMessage('');
-    }
+      try {
+        const chatHistory = await PushAPI.chat.history({
+          threadhash: conversationHash.threadHash,
+          account: `eip155:${address}`,
+          toDecrypt: true,
+          pgpPrivateKey: key,
+        });
+        setMessages(chatHistory);
+      } catch (e) {}
+    };
+
+    streamMessages();
+  }, [address, group, key]);
+
+  const handleSend = async () => {
+    if (!signer || !key || !group) return;
+
+    const response = await PushAPI.chat.send({
+      messageContent: message,
+      messageType: 'Text', // can be "Text" | "Image" | "File" | "GIF"
+      receiverAddress: group.chatId,
+      signer: signer as Wallet,
+      pgpPrivateKey: key,
+    });
+
+    const newMessages = [...messages, response];
+    setMessages(newMessages);
   };
 
   return (
     <div className='divide-y h-full'>
       <div className='h-2/3 m-4'>
         {messages.map((msg, index) =>
-          msg.senderAddress !== accountId ? (
+          msg.fromCAIP10 !== `eip155:${address}` ? (
             <div key={index} className='chat chat-start'>
               <div className='chat-image avatar'>
                 <div className='w-10'>
-                  <IdenticonImg username={msg.senderAddress} width={40} height={40} />
+                  <IdenticonImg username={msg.fromCAIP10} width={40} height={40} />
                 </div>
               </div>
               <div className='chat-header inline-flex gap-2 p-1'>
-                <p>{truncateEthAddress(msg.senderAddress)}</p>
-                <time className='text-xs opacity-50'>{msg.sent.toLocaleTimeString()}</time>
+                <p>{`eip155:${truncateEthAddress(msg.fromCAIP10.replace('eip155:', ''))}`}</p>
+                <time className='text-xs opacity-50'>
+                  {new Date(msg.timestamp || 0).toLocaleTimeString()}
+                </time>
               </div>
-              <div className='chat-bubble'>{msg.content}</div>
+              <div className='chat-bubble'>{msg.messageContent}</div>
             </div>
           ) : (
             <div key={index} className='chat chat-end'>
               <div className='chat-image avatar'>
                 <div className='w-10 rounded-full'>
-                  <IdenticonImg username={msg.senderAddress} width={40} height={40} />
+                  <IdenticonImg username={msg.fromCAIP10} width={40} height={40} />
                 </div>
               </div>
               <div className='chat-header inline-flex gap-2 p-1'>
-                <p>{truncateEthAddress(msg.senderAddress)}</p>
-                <time className='text-xs opacity-50'>{msg.sent.toLocaleTimeString()}</time>
+                <p>{`eip155:${truncateEthAddress(msg.fromCAIP10.replace('eip155:', ''))}`}</p>
+                <time className='text-xs opacity-50'>
+                  {new Date(msg.timestamp || 0).toLocaleTimeString()}
+                </time>
               </div>
-              <div className='chat-bubble'>{msg.content}</div>
+              <div className='chat-bubble'>{msg.messageContent}</div>
             </div>
           ),
         )}
