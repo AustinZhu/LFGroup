@@ -8,9 +8,10 @@ import Messages from './Messages';
 interface GroupDetailProps {
   readerClient?: Client;
   convo?: Conversation;
+  chatId?: string;
 }
 
-export default function GroupDetail({ readerClient }: GroupDetailProps) {
+export default function GroupDetail({ readerClient, chatId }: GroupDetailProps) {
   return (
     <div className='divide-y flex flex-col h-full'>
       <div className='p-4 flex justify-between items-center'>
@@ -29,7 +30,7 @@ export default function GroupDetail({ readerClient }: GroupDetailProps) {
             <Messages readerClient={readerClient} />
           </div>
           <div className='p-1 w-1/4'>
-            <MemberList />
+            <MemberList chatId={chatId}/>
           </div>
         </div>
       </div>

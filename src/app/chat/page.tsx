@@ -17,6 +17,7 @@ const ChatPage = () => {
 
   const [currentGroup, setCurrentGroup] = useState<Client>();
   const [currentConvo, setCurrentConvo] = useState<Conversation>();
+  const [currentChatId, setCurrentChatId] = useState<string>();
 
   if (!address) {
     return null;
@@ -44,10 +45,10 @@ const ChatPage = () => {
         </a>
       </div>
       <div className='w-1/4 bg-white'>
-        <GroupList setReaderClient={setCurrentGroup} setConvo={setCurrentConvo} />
+        <GroupList setReaderClient={setCurrentGroup} setConvo={setCurrentConvo} setChatId={setCurrentChatId}/>
       </div>
       <div className='flex-grow bg-white'>
-        <GroupDetail readerClient={currentGroup} convo={currentConvo} />
+        <GroupDetail readerClient={currentGroup} convo={currentConvo} chatId={currentChatId} />
       </div>
     </div>
   );

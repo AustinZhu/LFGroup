@@ -37,7 +37,7 @@ export default function Messages({ readerClient }: MessagesProps) {
 
   return (
     <div className='divide-y h-full'>
-      <div className='h-2/3 mx-2'>
+      <div className='h-2/3 m-4'>
         {messages.map((msg) => (
           <div className='chat chat-start'>
             <div className='chat-image avatar'>

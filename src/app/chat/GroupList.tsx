@@ -1,34 +1,98 @@
 'use client';
 
+import { IdenticonImg } from '@/components';
 import { usePKPWallet } from '@/hooks/useLit';
 import { useXMTPClient } from '@/hooks/useXMTP';
+import { truncateEthAddress } from '@/utils/ethereum';
 import { LitContracts } from '@lit-protocol/contracts-sdk';
-import { PKPNFT } from '@lit-protocol/contracts-sdk/src/abis/PKPNFT';
+import { Arrayish, PKPNFT } from '@lit-protocol/contracts-sdk/src/abis/PKPNFT';
+import { PKPPermissions } from '@lit-protocol/contracts-sdk/src/abis/PKPPermissions';
 import { Client, Conversation } from '@xmtp/xmtp-js';
+import { BigNumber, utils } from 'ethers';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSigner } from 'wagmi';
 
-const data = [
-  'will you go lunch with us ',
-  'will you go lunch with us ',
-  'will you go lunch with us ',
+const mockGroups: string[] = [
+  '12214489956700739559714548033094819536594287450588618676882006260107778902796',
 ];
+
+class Bytes implements Arrayish {
+  readonly bytes: Uint8Array;
+
+  constructor(bytes: Uint8Array) {
+    this.bytes = bytes;
+  }
+
+  toHexString(): string {
+    return utils.hexlify(this.bytes);
+  }
+
+  slice(start?: number, end?: number): Bytes {
+    return new Bytes(this.bytes.slice(start, end));
+  }
+
+  get length(): number {
+    return this.bytes.length;
+  }
+
+  [index: number]: number;
+}
 
 interface GroupListProps {
   setReaderClient: (client: Client) => void;
   setConvo: (convo?: Conversation) => void;
+  setChatId: (chatId?: string) => void;
 }
 
 const GroupList = ({ setReaderClient, setConvo }: GroupListProps) => {
-  const [currentGroupId, setCurrentGroupId] = useState<number>();
+  const [groupIds, setGroupIds] = useState<string[]>([]);
+  const [groupAddresses, setGroupAddresses] = useState<string[]>([]);
+  const [currentGroupId, setCurrentGroupId] = useState<string>();
   const { createWallet } = usePKPWallet();
   const { data: signer } = useSigner();
   const writer = useXMTPClient();
 
   const contracts = new LitContracts({ signer });
 
-  const handleClick = async (id: number) => {
+  useEffect(() => {
+    if (!writer) {
+      return;
+    }
+    const fetchGroupIds = async () => {
+      const bytesAddress = utils.solidityPack(['address'], [writer.address]);
+      const authMethodId = utils.keccak256(
+        utils.defaultAbiCoder.encode(['uint8, bytes'], [1, bytesAddress]),
+      );
+
+      const tokenIds = await (
+        contracts.pkpPermissionsContract.read as PKPPermissions
+      ).getTokenIdsForAuthMethod(1, new Bytes(utils.toUtf8Bytes(authMethodId)));
+
+      const pkpAddresses = await Promise.all(
+        tokenIds.map(async (id: BigNumber) => {
+          return await (contracts.pkpNftContract.read as PKPNFT).getEthAddress(id);
+        }),
+      );
+
+      const convoAddrs = (await writer?.conversations.list()).map((c) => c.peerAddress);
+      const groupIds = tokenIds
+        ?.filter((id, i) => convoAddrs.includes(pkpAddresses[i]))
+        .map((id) => id.toString());
+      const groupAddresses = pkpAddresses.filter((addr) => convoAddrs.includes(addr));
+
+      setGroupAddresses(groupAddresses);
+      setGroupIds(groupIds || []);
+    };
+
+    fetchGroupIds();
+  }, [writer]);
+
+  const handleClick = async (id: string) => {
+    if (!writer) {
+      return;
+    }
+
     setCurrentGroupId(id);
 
     await contracts.connect();
@@ -41,7 +105,7 @@ const GroupList = ({ setReaderClient, setConvo }: GroupListProps) => {
     const reader = await Client.create(wallet, { env: 'production' });
     setReaderClient(reader);
 
-    const convo = await writer?.conversations.newConversation(wallet.address);
+    const convo = await writer.conversations.newConversation(wallet.address);
     setConvo(convo);
   };
 
@@ -67,26 +131,26 @@ const GroupList = ({ setReaderClient, setConvo }: GroupListProps) => {
         </div>
       </div>
       <div>
-        {data.map((item, index) => (
-          <div key={index} className='group' onClick={() => handleClick(index)}>
+        {groupIds.map((id, i) => (
+          <div key={id} className='group' onClick={() => handleClick(id)}>
             <div
               className={`flex items-center p-4 group-hover:bg-[#0BA360] ${
-                index === currentGroupId ? 'bg-[#0BA360]' : ''
+                id === currentGroupId ? 'bg-[#0BA360]' : ''
               }`}
             >
-              <Image alt='avatar' src='/avatar1.png' width={40} height={40} className='mr-4' />
+              <IdenticonImg username={groupAddresses[i]} width={40} height={40} className='mr-4' />
               <div className='flex flex-col w-full'>
                 <div className='flex items-center'>
                   <p
                     className={`font-bold group-hover:text-white ${
-                      index === currentGroupId ? 'text-white' : ''
+                      id === currentGroupId ? 'text-white' : ''
                     }`}
                   >
-                    Group 1
+                    {truncateEthAddress(groupAddresses[i])}
                   </p>
                   <span
                     className={`ml-auto group-hover:opacity-50 group-hover:text-gray-100 text-sm ${
-                      index === currentGroupId ? 'text-gray-100 opacity-50' : 'text-gray-300'
+                      id === currentGroupId ? 'text-gray-100 opacity-50' : 'text-gray-300'
                     }`}
                   >
                     10:30 AM
@@ -94,10 +158,10 @@ const GroupList = ({ setReaderClient, setConvo }: GroupListProps) => {
                 </div>
                 <p
                   className={`group-hover:opacity-75 group-hover:text-gray-200 ${
-                    index === currentGroupId ? 'opacity-75 text-gray-200' : 'text-gray-500'
+                    id === currentGroupId ? 'opacity-75 text-gray-200' : 'text-gray-500'
                   }`}
                 >
-                  {item}
+                  {'Hello, World!'}
                 </p>
               </div>
             </div>
