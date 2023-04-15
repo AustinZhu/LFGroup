@@ -101,7 +101,7 @@ const MemberList = ({ group, setGroup }: MemberListProps) => {
                 className='rounded-full mr-4'
               />
             </div>
-            <p className='text-gray-700 ml-1'>{truncateEthAddress(member.wallet)}</p>
+            <p className='text-gray-700 ml-1'>{truncateEthAddress(member.wallet.replace('eip155:', ''))}</p>
             <div className='hidden group-hover:flex ml-auto'>
               <button
                 className='bg-gray-200 p-2 hover:bg-gray-300'

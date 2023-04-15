@@ -55,11 +55,13 @@ export default function Messages({ group }: MessagesProps) {
 
     const newMessages = [...messages, response];
     setMessages(newMessages);
+
+    setMessage('');
   };
 
   return (
     <div className='divide-y h-full'>
-      <div className='h-2/3 m-4'>
+      <div className='h-2/3 m-4 overflow-y-scroll'>
         {messages.map((msg, index) =>
           msg.fromCAIP10 !== `eip155:${address}` ? (
             <div key={index} className='chat chat-start'>
