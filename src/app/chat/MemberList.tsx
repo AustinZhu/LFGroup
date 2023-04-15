@@ -33,14 +33,14 @@ const MemberList = ({ chatId }: MemberListProps) => {
       setMembers(members);
     };
     getMembers();
-  }, []);
+  }, [address, chatId, getPermissions]);
 
   const handleShowCard = (id: number) => {
     setShowCard(!showCard);
     setCurrentUserId(id);
   };
   return (
-    <div className='px-2'>
+    <div className='px-2 relative'>
       <h3 className='text-lg font-bold text-gray-700'>Members</h3>
       <input type='checkbox' id='modal-5' className='modal-toggle' />
       <div className='modal'>
@@ -68,49 +68,45 @@ const MemberList = ({ chatId }: MemberListProps) => {
               />
             </div>
             <p className='text-gray-700 ml-1'>{truncateEthAddress(member)}</p>
-            <div className='hidden group-hover:flex'>
-              <button className='bg-gray-200 p-2 rounded-md hover:bg-gray-300' onClick={() => handleShowCard(index)}>
-                <Image
-                  alt='More'
-                  src='/dots.svg'
-                  width={10}
-                  height={10}
-                />
+            <div className='hidden group-hover:flex ml-auto'>
+              <button
+                className='bg-gray-200 p-2 hover:bg-gray-300'
+                onClick={() => handleShowCard(index)}
+              >
+                <Image alt='More' src='/dots.svg' width={10} height={10} />
               </button>
             </div>
-            {showCard && currentUserId !== null && currentUserId === index && (
-              <div className='absolute right-0 mt-2 p-2 bg-white border shadow-md z-10'>
-                <div className='flex items-center  mb-4'>
-                  <div className='flex flex-col items-center'>
-                    <div className='flex items-center'>
-                      <IdenticonImg
-                        username={member}
-                        width={50}
-                        height={50}
-                        className='rounded-full mr-4'
-                      />
-                      <p className='text-gray-700 font-medium ml-5'>{truncateEthAddress(member)}</p>
-                    </div>
-                    <div className='my-2 border-b w-full'></div>
-                    <p className='text-gray-700 items-center'>0x00000000000000000</p>
-                    <button className='btn btn-error btn-wide'>
-                      <label htmlFor='modal-5'>Remove</label>
-                    </button>
+          </div>
+          {showCard && currentUserId !== null && currentUserId === index && (
+            <div className='absolute right-0 mt-2 p-2 bg-white border shadow-md z-10'>
+              <div className='flex items-center mb-4'>
+                <div className='flex flex-col items-center'>
+                  <div className='flex items-center'>
+                    <IdenticonImg
+                      username={member}
+                      width={50}
+                      height={50}
+                      className='rounded-full mr-2'
+                    />
+                    <p className='text-gray-700 font-medium ml-5'>{truncateEthAddress(member)}</p>
                   </div>
+                  <div className='my-2 border-b w-full'></div>
+                  <p className='text-gray-700 items-center'>0x00000000000000000</p>
+                  <button className='btn btn-error btn-wide'>
+                    <label htmlFor='modal-5'>Remove</label>
+                  </button>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       ))}
-
-
       <style jsx>{`
         .group:hover .absolute {
           display: block;
         }
       `}</style>
-    </div >
+    </div>
   );
 };
 
