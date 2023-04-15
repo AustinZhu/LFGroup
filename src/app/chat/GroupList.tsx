@@ -70,22 +70,23 @@ const GroupList = ({ setReaderClient, setConvo }: GroupListProps) => {
         utils.defaultAbiCoder.encode(['uint8', 'bytes'], [1, bytesAddress]),
       );
 
-      const tokenIds = await (
+      let tokenIds = await (
         contracts.pkpPermissionsContract.read as PKPPermissions
       ).getTokenIdsForAuthMethod(1, new Bytes(utils.toUtf8Bytes(authMethodId)));
 
       const balance = await (contracts.pkpNftContract.read as PKPNFT).balanceOf(writer.address);
+      const tokenIdsByOwner = [];
       for (let i = 0; i < balance.toNumber(); i++) {
         const tokenIdByOwner = await (contracts.pkpNftContract.read as PKPNFT).tokenOfOwnerByIndex(
           writer.address,
           i,
         );
-        console.log('tokenIdByOwner', tokenIdByOwner)
         if (!tokenIds.includes(tokenIdByOwner)) {
-          tokenIds.push(tokenIdByOwner);
+          tokenIdsByOwner.push(tokenIdByOwner);
         }
       }
-      console.log('tokenIds', tokenIds)
+
+      tokenIds = [...tokenIds, ...tokenIdsByOwner];
 
       const pkpAddresses = await Promise.all(
         tokenIds.map(async (id: BigNumber) => {
