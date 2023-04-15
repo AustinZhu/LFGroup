@@ -35,6 +35,12 @@ export default function Messages({ readerClient }: MessagesProps) {
     streamMessages();
   }, [readerClient?.conversations]);
 
+  const onEnterPress = (e) => {
+    if (e.keyCode == 13 && e.shiftKey == false) {
+      e.preventDefault();
+      this.myFormRef.requestSubmit();
+    }
+  }
   return (
     <div className='divide-y h-full'>
       <div className='h-2/3 m-4'>
@@ -54,7 +60,7 @@ export default function Messages({ readerClient }: MessagesProps) {
         ))}
       </div>
       <div className='h-1/3'>
-        <textarea placeholder='Bio' className='textarea h-full w-full'></textarea>
+        <textarea placeholder='Bio' className='textarea h-full w-full' onKeyDown={(e) => onEnterPress(e)}></textarea>
       </div>
     </div>
   );

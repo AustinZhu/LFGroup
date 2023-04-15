@@ -112,6 +112,28 @@ const GroupList = ({ setReaderClient, setConvo }: GroupListProps) => {
   return (
     <>
       <div className='p-4 flex justify-between items-center'>
+        <input type='checkbox' id='modal-1' className='modal-toggle' />
+        <div className='modal'>
+          <div className='modal-box relative'>
+            <label htmlFor='modal-1' className='btn btn-sm btn-circle absolute right-2 top-2'>
+              ✕
+            </label>
+            <h3 className='text-lg font-bold'>Join Group</h3>
+            <input type='text' placeholder='Group Code' className='input w-full max-w-xs mt-2' />
+            <button className='btn ml-4'>Join</button>
+          </div>
+        </div>
+        <input type='checkbox' id='modal-2' className='modal-toggle' />
+        <div className='modal'>
+          <div className='modal-box relative'>
+            <label htmlFor='modal-2' className='btn btn-sm btn-circle absolute right-2 top-2'>
+              ✕
+            </label>
+            <h3 className='text-lg font-bold'>Create Group</h3>
+            <input type='text' placeholder='Group Name' className='input w-full max-w-xs mt-2' />
+            <button className='btn ml-4'>Join</button>
+          </div>
+        </div>
         <h2 className='text-lg font-bold'>Group List</h2>
         <div className='dropdown'>
           <label tabIndex={0} className='btn bg-gray-200 border-0 hover:bg-gray-400'>
@@ -122,10 +144,14 @@ const GroupList = ({ setReaderClient, setConvo }: GroupListProps) => {
             className='dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52'
           >
             <li>
-              <button>Create</button>
+              <label htmlFor='modal-1'>
+                <button>Create</button>
+              </label>
             </li>
             <li>
-              <button>Join</button>
+              <label htmlFor='modal-2'>
+                <button>Join</button>
+              </label>
             </li>
           </ul>
         </div>
@@ -134,32 +160,28 @@ const GroupList = ({ setReaderClient, setConvo }: GroupListProps) => {
         {groupIds.map((id, i) => (
           <div key={id} className='group' onClick={() => handleClick(id)}>
             <div
-              className={`flex items-center p-4 group-hover:bg-[#0BA360] ${
-                id === currentGroupId ? 'bg-[#0BA360]' : ''
-              }`}
+              className={`flex items-center p-4 group-hover:bg-[#0BA360] ${id === currentGroupId ? 'bg-[#0BA360]' : ''
+                }`}
             >
               <IdenticonImg username={groupAddresses[i]} width={40} height={40} className='mr-4' />
               <div className='flex flex-col w-full'>
                 <div className='flex items-center'>
                   <p
-                    className={`font-bold group-hover:text-white ${
-                      id === currentGroupId ? 'text-white' : ''
-                    }`}
+                    className={`font-bold group-hover:text-white ${id === currentGroupId ? 'text-white' : ''
+                      }`}
                   >
                     {truncateEthAddress(groupAddresses[i])}
                   </p>
                   <span
-                    className={`ml-auto group-hover:opacity-50 group-hover:text-gray-100 text-sm ${
-                      id === currentGroupId ? 'text-gray-100 opacity-50' : 'text-gray-300'
-                    }`}
+                    className={`ml-auto group-hover:opacity-50 group-hover:text-gray-100 text-sm ${id === currentGroupId ? 'text-gray-100 opacity-50' : 'text-gray-300'
+                      }`}
                   >
                     10:30 AM
                   </span>
                 </div>
                 <p
-                  className={`group-hover:opacity-75 group-hover:text-gray-200 ${
-                    id === currentGroupId ? 'opacity-75 text-gray-200' : 'text-gray-500'
-                  }`}
+                  className={`group-hover:opacity-75 group-hover:text-gray-200 ${id === currentGroupId ? 'opacity-75 text-gray-200' : 'text-gray-500'
+                    }`}
                 >
                   {'Hello, World!'}
                 </p>
